@@ -144,57 +144,30 @@ int main() {
 	cout << " 128-bit AES Decryption Tool " << endl;
 	cout << "=============================" << endl;
 
-	// Read in the message from message.aes
-	string msgstr;
-	ifstream infile;
-	infile.open("message.aes", ios::in | ios::binary);
+    cout<<"Mensaje a encriptar: ";
+    char mensaje[] = "Default message!";
+    cin.getline(mensaje, 100);
+    cout<<endl;
 
-	if (infile.is_open())
-	{
-		getline(infile, msgstr); // The first line of file is the message
-		cout << "Read in encrypted message from message.aes" << endl;
-		infile.close();
-	}
-
-	else cout << "Unable to open file";
-
-	char * msg = new char[msgstr.size()+1];
-
-	strcpy(msg, msgstr.c_str());
-
-	int n = strlen((const char*)msg);
+	int n = strlen((const char*)mensaje);
 
 	unsigned char * encryptedMessage = new unsigned char[n];
 	for (int i = 0; i < n; i++) {
-		encryptedMessage[i] = (unsigned char)msg[i];
+		encryptedMessage[i] = (unsigned char)mensaje[i];
 	}
 
 	// Free memory
-	delete[] msg;
+	delete[] encryptedMessage;
 
-	// Read in the key
-	string keystr;
-	ifstream keyfile;
-	keyfile.open("keyfile", ios::in | ios::binary);
 
-	if (keyfile.is_open())
-	{
-		getline(keyfile, keystr); // The first line of file should be the key
-		cout << "Read in the 128-bit key from keyfile" << endl;
-		keyfile.close();
-	}
-
-	else cout << "Unable to open file";
-
-	istringstream hex_chars_stream(keystr);
 	unsigned char key[16];
-	int i = 0;
-	unsigned int c;
-	while (hex_chars_stream >> hex >> c)
+	int num;
+	for (int i = 0; i < strlen((const char*)key); i++)
 	{
-		key[i] = c;
-		i++;
+		cin>>num;
+		key[i] = num;
 	}
+	
 
 	unsigned char expandedKey[176];
 
