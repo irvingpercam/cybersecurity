@@ -181,8 +181,8 @@ void printHexadecimal(unsigned char a, int i, unsigned char * encryptedMessage){
 int main(){
     // Mensaje a encriptar.
     cout<<"Mensaje a encriptar: ";
-    char mensaje[] = "Default message!";
-    cin.getline(mensaje, 100);
+    char mensaje[1024];
+    cin.getline(mensaje, sizeof(mensaje));
     cout<<endl;
     // Para esta implementación, estaremos utilizando una llave de 16 bytes.
     unsigned char key[16];
