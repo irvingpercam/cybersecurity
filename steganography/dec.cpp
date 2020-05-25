@@ -29,12 +29,11 @@
 */
 /* [START] LIBRARIES */
 #include <iostream>
-#include <stdlib.h>
 #include <cstring>
 #include <fstream>
 #include <sstream>
 #include "structures.h"
-/* [END] LIBRARIES */
+
 using namespace std;
 /* [START] SUBBYTES
 *   Esta función reemplaza cada byte del esado por otro byte, dependiendo de la llave recibida
@@ -42,13 +41,15 @@ using namespace std;
 *   caja de Rijndael. Esta tabla consiste en sustituciones de 256 bytes contenidas en un arreglo
 *   de 16x16.
 */
-void subBytes(unsigned char* state){
-    for (int i = 0; i < 16; i++)
+void SubBytes(unsigned char * state)
+{
+	for (int i = 0; i < 16; i++)
     {
-        state[i] = inv_s[state[i]];
-    }
+		state[i] = inv_s[state[i]];
+	}
 }
-void inverseMixColumns(unsigned char * state) {
+void inverseMixColumns(unsigned char * state)
+{
 	unsigned char tmp[16];
 
 	tmp[0] = (unsigned char)mul14[state[0]] ^ mul11[state[1]] ^ mul13[state[2]] ^ mul9[state[3]];
@@ -75,8 +76,8 @@ void inverseMixColumns(unsigned char * state) {
 		state[i] = tmp[i];
 	}
 }
-
-void shiftRows(unsigned char * state) {
+void shiftRows(unsigned char * state)
+{
 	unsigned char tmp[16];
 
 	tmp[0] = state[0];
@@ -99,105 +100,103 @@ void shiftRows(unsigned char * state) {
 	tmp[14] = state[6];
 	tmp[15] = state[3];
 
-	for (int i = 0; i < 16; i++) {
+	for (int i = 0; i < 16; i++)
+    {
 		state[i] = tmp[i];
 	}
 }
-void addRoundKey(unsigned char* state, unsigned char* roundKey){
-    for (int i = 0; i < 16; i++)
-    {
-        state[i] ^= roundKey[i];
-    }
-}
-void aes_decrypt(unsigned char* message, unsigned char* key, unsigned char* dMessage){
-    unsigned char state[16];
-    for (int i = 0; i < 16; i++)
-    {
-        state[i] = message[i];
-    }
-    addRoundKey(state, key + 160);
-    shiftRows(state);
-    subBytes(state);
-    int rounds = 9;
-    for (int i = 8; i >= 0; i--)
-    {
-        addRoundKey(state, key);
-		inverseMixColumns(state);
-        shiftRows(state);
-        subBytes(state);
-    }
-    addRoundKey(state, key);
-    // Copiar estado descifrado al mensaje
-    for (int i = 0; i < 16; i++)
-    {
-        dMessage[i] = state[i];
-    }
-    
-}
-/* [END] FUNCTIONS */
-/* [START] MAIN FUNCTION */
-int main(int argc, char const *argv[])
+void addRoundKey(unsigned char * state, unsigned char * roundKey)
 {
-	// Read in the message from message.aes
-	string msgstr;
-	ifstream infile;
-	infile.open("topsecret.aes", ios::in | ios::binary);
-
-	if (infile.is_open())
-	{
-		getline(infile, msgstr); // The first line of file is the message
-		cout << "Read in encrypted message from message.aes" << endl;
-		infile.close();
+	for (int i = 0; i < 16; i++)
+    {
+		state[i] ^= roundKey[i];
 	}
+}
 
-	else cout << "Unable to open file";
-
-	char * msg = new char[msgstr.size()+1];
-
-	strcpy(msg, msgstr.c_str());
-
-	int n = strlen((const char*)msg);
-
-	unsigned char * encryptedMessage = new unsigned char[n];
-	for (int i = 0; i < n; i++) {
+void aes_decrypt(unsigned char * encryptedMessage, unsigned char * key, unsigned char * decryptedMessage)
+{
+	unsigned char state[16];
+	for (int i = 0; i < 16; i++)
+    {
+		state[i] = encryptedMessage[i];
+	}
+    unsigned char expandedKey[176];
+	keyExpansion(key, expandedKey);
+    addRoundKey(state, expandedKey+160);
+	shiftRows(state);
+	SubBytes(state);
+	int numberOfRounds = 9;
+	for (int i = 8; i >= 0; i--)
+    {
+        addRoundKey(state, expandedKey + (16 * (i + 1)));
+        inverseMixColumns(state);
+        shiftRows(state);
+        SubBytes(state);
+	}
+	addRoundKey(state, expandedKey);
+	for (int i = 0; i < 16; i++)
+    {
+		decryptedMessage[i] = state[i];
+	}
+}
+int main(int argc, char* argv[]) {
+	string mensaje; // Variable para almacenar el mensaje
+	ifstream topsecret; // Archivo de entrada
+	topsecret.open("topsecret.aes", ios::in | ios::binary); // Leer el archivo
+	if (topsecret.is_open())
+	{
+		getline(topsecret, mensaje);
+        cout<<"Leyendo archivo..."<<endl;
+		topsecret.close();
+	}
+	else
+    {
+        fprintf(stderr, "%s: fallo al abrir el archivo del mensaje\n", argv[0]); // Error de archivo de entrada
+    }
+	char * msg = new char[mensaje.size()+1];
+	strcpy(msg, mensaje.c_str()); // Copiar el mensaje a msg
+	int messageLength = strlen((const char*)msg);
+	unsigned char * encryptedMessage = new unsigned char[messageLength];
+	for (int i = 0; i < messageLength; i++) {
 		encryptedMessage[i] = (unsigned char)msg[i];
 	}
-
-	// Free memory
+    // Liberar memoria
 	delete[] msg;
-
-	// Read in the key
 	unsigned char key[16];
-    cout<<"Llave para encriptar: ";
+    cout<<"Clave privada: ";
     for (int i = 0; i < 16; i++)
     {
         scanf("%hhu", &key[i]);
     }
-	unsigned char expandedKey[176];
-
-	keyExpansion(key, expandedKey);
-	
 	int messageLen = strlen((const char *)encryptedMessage);
-
 	unsigned char * decryptedMessage = new unsigned char[messageLen];
-
 	for (int i = 0; i < messageLen; i += 16) {
-		aes_decrypt(encryptedMessage + i, expandedKey, decryptedMessage + i);
+		aes_decrypt(encryptedMessage + i, key, decryptedMessage + i);
 	}
-
-	cout << "Decrypted message in hex:" << endl;
+	cout << "Mensaje descifrado en hexadecimal: " << endl;
 	for (int i = 0; i < messageLen; i++) {
-		cout << hex << (int)decryptedMessage[i];
-		cout << " ";
+        if (decryptedMessage[i] != '\0')
+        {
+            cout << hex << (int)decryptedMessage[i];
+		    cout << " ";
+        }
+        else
+        {
+            break;
+        }
 	}
 	cout << endl;
-	cout << "Decrypted message: ";
+	cout << "Mensaje descifrado: ";
 	for (int i = 0; i < messageLen; i++) {
-		cout << decryptedMessage[i];
+        if (decryptedMessage[i] != '\0')
+        {
+            cout<<decryptedMessage[i];
+        }
+        else
+        {
+            break;
+        }
 	}
 	cout << endl;
-
 	return 0;
 }
-
-/* [END] MAIN FUNCTION */
