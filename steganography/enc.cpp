@@ -2,13 +2,13 @@
 /* [START] MAIN FUNCTION */
 int main(){
     // Mensaje a encriptar.
-    cout<<"Mensaje a encriptar: ";
+    cout<<"Mensaje a cifrar: ";
     char mensaje[1024];
     cin.getline(mensaje, sizeof(mensaje));
     cout<<endl;
     // Para esta implementación, estaremos utilizando una llave de 16 bytes.
     unsigned char key[16];
-    cout<<"Llave privada: ";
+    cout<<"Clave privada a 16 dígitos: ";
     for (int i = 0; i < 16; i++)
     {
         scanf("%hhu", &key[i]);
