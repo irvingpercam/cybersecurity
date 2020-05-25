@@ -35,7 +35,7 @@
 #include <cstring>
 #include <fstream>
 #include <sstream>
-#include "structures.h"
+#include "rijndael.h"
 /* [END] LIBRARIES */
 using namespace std;
 /* [START] SUBBYTES
